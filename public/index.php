@@ -12,6 +12,7 @@ use App\Mail\Classes\SendEmail;
 $email = new SendEmail;
 $email->to('lc_bueno@hotmail.com', 'Louis');
 $email->content('Dev Test', "<h3>Uhull!</h3><p><b>Testing</b></p>");
+$email->send();
 var_dump($email,
 		$email->errorMessage);
 
