@@ -1,0 +1,26 @@
+{
+    "name": "luis/app-mail",
+	"description": "Email Sender App",
+	"minimum-stability": "dev",
+	"license": "MIT",
+    "authors": [
+        {
+            "name": "Luis Bueno",
+            "email": "lu.cusco@gmail.com",
+			"role": "Developer"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "App\\Mail\\": "src/"
+        },
+		"files": [
+			"src/config/constants.php"
+		]
+	},
+    "require": {
+		"phpmailer/phpmailer": "^6.5",
+        "vlucas/phpdotenv": "^5.3",
+        "monolog/monolog": "^2.3"
+	}
+}
