@@ -17,7 +17,7 @@ final class SendEmail
 
 	public string $errorMessage;
 
-	public function __construct($fromName = CONF_EMAIL_FROM_NAME)
+	public function __construct(string $fromName = CONF_EMAIL_FROM_NAME)
 	{
 		$this->mail = new PHPMailer(true);
 		$this->mail->CharSet = CONF_EMAIL_CHARSET;
@@ -37,6 +37,11 @@ final class SendEmail
 		$this->hasContent = false;
 		$this->errorMessage = '';
 
+		$this->initLog();
+	}
+
+	private function initLog(): void
+	{
 		$this->log = new Log(LOG::LOG_EMAIL);
 		$this->log->addMessage(INFO_LEVEL, "New e-mail object created now");
 	}
@@ -49,11 +54,13 @@ final class SendEmail
 	 */
 	public function to(string $address, string $name): void
 	{
-		if (filter_var($address, FILTER_VALIDATE_EMAIL) && !empty($name)) {
-			$this->mail->addAddress($address, $name);
-			$this->hasAddress = true;
-			$this->log->addMessage(NOTICE_LEVEL, "Added address $address and name $name to e-mail");
+		if (!filter_var($address, FILTER_VALIDATE_EMAIL) || empty($name)) {
+			return;
 		}
+		
+		$this->mail->addAddress($address, $name);
+		$this->hasAddress = true;
+		$this->log->addMessage(NOTICE_LEVEL, "Added address $address and name $name to e-mail");
 	}
 
 	/**
@@ -64,13 +71,15 @@ final class SendEmail
 	 */
 	public function content(string $subjetc, string $message): void
 	{
-		if (!empty($subjetc) && !empty($message)) {
-			$this->mail->isHTML(true);
-			$this->mail->Subject = $subjetc;
-			$this->mail->Body = $message;
-			$this->hasContent = true;
-			$this->log->addMessage(NOTICE_LEVEL, "Added subject $subjetc and content to e-mail");
+		if (!empty($subjetc) || !empty($message)) {
+			return;
 		}
+
+		$this->mail->isHTML(true);
+		$this->mail->Subject = $subjetc;
+		$this->mail->Body = $message;
+		$this->hasContent = true;
+		$this->log->addMessage(NOTICE_LEVEL, "Added subject $subjetc and content to e-mail");
 	}
 
 	/**
@@ -99,9 +108,11 @@ final class SendEmail
 	 */
 	public function attach(string $pathToFile, string $filename): void
 	{
-		if (!empty($pathToFile) && !empty($filename)) {
-			$this->mail->addAttachment($pathToFile, $filename);
+		if (empty($pathToFile) || !empty($filename)) {
+			return;
 		}
+
+		$this->mail->addAttachment($pathToFile, $filename);
 	}
 
 	/**

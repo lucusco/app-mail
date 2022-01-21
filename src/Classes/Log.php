@@ -10,7 +10,7 @@ use Monolog\Formatter\LineFormatter;
 
 final class Log implements LogInterface
 {
-	private $log;
+	private Logger $log;
 
 	public const LOG_EMAIL = 'mail.log';
 
