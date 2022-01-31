@@ -1,0 +1,11 @@
+# Routes
+
+home:
+    path:       /
+    controller: App\Mail\Controllers\EmailController::handle
+    methods:    GET
+
+send:
+    path:       /send
+    controller: App\Mail\Controllers\EmailController::send
+    methods:    POST
