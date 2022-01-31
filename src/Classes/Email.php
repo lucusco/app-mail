@@ -7,7 +7,7 @@ use App\Mail\Classes\LogInterface;
 use PHPMailer\PHPMailer\Exception;
 use PHPMailer\PHPMailer\PHPMailer;
 
-final class SendEmail
+final class Email
 {
 	private PHPMailer $mail;
 	private LogInterface $log;
