@@ -1,8 +1,9 @@
 ## Email Sender App
 
-Project developed to implement PHPMailer and Monolog libraries as part of improve PHP acknowledgement.
-Also, some Symfony packages were implemented to deal with Routes, Requests and Responses. The aim is to be like a 'real world' application,  besides, of course, to understand how this packages works.
-A simple interface was created to interact with user and give him the possibility to send an email.
+* Project developed to implement PHPMailer and Monolog libraries as part of improve PHP acknowledgement. 
+Also, some Symfony packages were implemented to deal with Routes, Requests and Responses. The aim is to be like a 'real world' application,  besides, of course, to understand how this packages works. 
+A simple interface was created to interact with user and give him the possibility to send an email. 
+This project is foccused in backend development.
 
 #### Main Goal
 Be able to send an email
