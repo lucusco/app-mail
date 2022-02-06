@@ -7,11 +7,14 @@ require SRC_DIR . 'config/loadEnvs.php';
 
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\RequestContext;
 use Symfony\Component\Routing\Matcher\UrlMatcher;
 use Symfony\Component\Routing\Loader\YamlFileLoader;
 use Symfony\Component\Routing\Exception\MethodNotAllowedException;
 use Symfony\Component\Routing\Exception\ResourceNotFoundException;
+use Symfony\Component\HttpKernel\Controller\ControllerResolver;
+use Symfony\Component\HttpKernel\Controller\ArgumentResolver;
 
 try {
     // Load routes
@@ -19,27 +22,32 @@ try {
     $loader = new YamlFileLoader($fileLocator);
     $routes = $loader->load('routes.yaml');
 
-    // Init RequestContext object
+    // RequestContext (required for UrlMatcher to work)
     $context = new RequestContext();
     $request = Request::createFromGlobals();
     $context->fromRequest($request);
 
-    // Init UrlMatcher object
-    $matcher = new UrlMatcher($routes, $context);
+    $matcher = new UrlMatcher($routes ,$context);
 
-    // Find the current route
-    $parameters = $matcher->match($context->getPathInfo());
+    // Current route
+    $routeRequested = $context->getPathInfo();
+
+    // If route matches, add all route params to the request
+    $request->attributes->add($matcher->match($routeRequested));
+
+    $argumentResolver = new ArgumentResolver();
+    $controllerResolver = new ControllerResolver();
+
+    // Get the controller/arguments defined for the route
+    $controller = $controllerResolver->getController($request);
+    $arguments = $argumentResolver->getArguments($request, $controller);
 
     // Call 
-    list($controller, $method) = explode('::', $parameters['_controller']);
-    call_user_func(array($controller, $method), $request);
-
+    call_user_func_array($controller, $arguments);
 } catch (ResourceNotFoundException $e) {
-    echo $e->getMessage();
-    http_response_code(404);
+    return (new Response('Not Found! >>> '.$e->getMessage(), 404))->send();
 } catch (MethodNotAllowedException $e) {
-    echo 'Method Not Allowed';
-    http_response_code(405);
+    return (new Response('Method Not Allowed >>> '.$e->getMessage(), 405))->send();
 } catch (Exception $e) {
-    echo $e->getMessage();
+    return (new Response('An error occurred >>> '.$e->getMessage(), 500))->send();
 }

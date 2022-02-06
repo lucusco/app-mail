@@ -3,16 +3,20 @@
 namespace App\Mail\Controllers;
 
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class EmailController
 {
-    public static function handle(Request $req)
+    public static function home()
     {
-        echo 'Handle';
+        ob_start();
+        include __DIR__ . '/../Views/index.html';
+
+        return (new Response(ob_get_clean()))->send();
     }
 
     public static function send(Request $req)
     {
-        echo 'Send';
+        var_dump($req->request->all());
     }
 }

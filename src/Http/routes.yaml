@@ -2,7 +2,7 @@
 
 home:
     path:       /
-    controller: App\Mail\Controllers\EmailController::handle
+    controller: App\Mail\Controllers\EmailController::home
     methods:    GET
 
 send:
