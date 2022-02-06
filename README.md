@@ -6,7 +6,7 @@ Also, some Symfony packages were implemented to deal with Routes, Requests and R
 
 A simple interface was created to interact with user and give him the possibility to send an email. Bellow, the interface screenshoot:
 
-![alt text](https://github.com/lucusco/app-mail/blob/main/docs/screenshot.png?raw=true)
+![alt text](https://github.com/lucusco/app-mail/blob/main/docs/screenshot1.png?raw=true)
 
 #### Main Goal
 Be able to send an email
