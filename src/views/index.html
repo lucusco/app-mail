@@ -21,8 +21,16 @@
       <h2>E-mail Sender App</h2>
       <form action="send" method="post">
         <div>
-          <label for="email" class="form-label">E-mail</label>
+          <label for="name" class="form-label">Your Name</label>
+          <input type="text" id="name" name="name" class="form-control" placeholder="Identify yourself" />
+        </div>
+        <div>
+          <label for="email" class="form-label">Send to</label>
           <input type="email" id="email" name="email" class="form-control" placeholder="Recipient e-mail" />
+        </div>
+        <div>
+          <label for="subject" class="form-label">Subject</label>
+          <input type="text" id="subject" name="subject" class="form-control" placeholder="E-mail subject" />
         </div>
         <div>
           <label for="message" class="form-label">Message</label>
