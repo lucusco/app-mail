@@ -47,20 +47,21 @@ final class Email
 	}
 
 	/**
-	 * Add a "To" address and a Name
+	 * Add a "To" address and an optional From Name
 	 *
 	 * @param string $address
-	 * @param string $name
+	 * @param string $fromName
 	 */
-	public function to(string $address, string $name): void
+	public function to(string $address, string $fromName = null): void
 	{
-		if (!filter_var($address, FILTER_VALIDATE_EMAIL) || empty($name)) {
+		if (!filter_var($address, FILTER_VALIDATE_EMAIL)) {
 			return;
 		}
 		
-		$this->mail->addAddress($address, $name);
+		$this->mail->addAddress($address, htmlspecialchars($fromName, ENT_QUOTES));
+        if ($fromName) $this->mail->FromName = filter_var($fromName, FILTER_SANITIZE_STRING);
 		$this->hasAddress = true;
-		$this->log->addMessage(NOTICE_LEVEL, "Added address $address and name $name to e-mail");
+		$this->log->addMessage(NOTICE_LEVEL, "Added address $address to e-mail");
 	}
 
 	/**
@@ -71,13 +72,13 @@ final class Email
 	 */
 	public function content(string $subjetc, string $message): void
 	{
-		if (!empty($subjetc) || !empty($message)) {
+		if (empty($subjetc) || empty($message)) {
 			return;
 		}
 
-		$this->mail->isHTML(true);
-		$this->mail->Subject = $subjetc;
-		$this->mail->Body = $message;
+		$this->mail->isHTML(false);
+		$this->mail->Subject = htmlspecialchars($subjetc, ENT_QUOTES);
+		$this->mail->Body = htmlspecialchars($message, ENT_QUOTES);
 		$this->hasContent = true;
 		$this->log->addMessage(NOTICE_LEVEL, "Added subject $subjetc and content to e-mail");
 	}
@@ -88,12 +89,12 @@ final class Email
 	public function send(): bool
 	{
 		try {
-			if ($this->hasRequiredFields()) {
-				return $this->mail->send();
-			}
-			$this->errorMessage = "Required Fields Missing!";
-			return false;
-
+			if (!$this->hasRequiredFields()) {
+                $this->errorMessage = "Required Fields Missing!";
+                return false;
+            }
+            
+            return $this->mail->send();
 		} catch (Exception $e) {
 			$this->errorMessage = $e->getMessage();
 			return false;
@@ -108,7 +109,7 @@ final class Email
 	 */
 	public function attach(string $pathToFile, string $filename): void
 	{
-		if (empty($pathToFile) || !empty($filename)) {
+		if (empty($pathToFile) || empty($filename)) {
 			return;
 		}
 
