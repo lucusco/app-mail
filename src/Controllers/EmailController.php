@@ -10,8 +10,6 @@ use Symfony\Component\HttpFoundation\Response;
 
 class EmailController
 {
-    use ControllerTrait;
-
     public static function home(): Response
     {
         $twig = AppViews::getTemplate();
