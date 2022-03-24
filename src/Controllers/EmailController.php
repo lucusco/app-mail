@@ -3,20 +3,38 @@
 namespace App\Mail\Controllers;
 
 use App\Mail\Classes\Email;
+use App\Mail\Views\AppViews;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class EmailController
 {
+    use ControllerTrait;
+
     public static function home(): Response
     {
-        ob_start();
-        include __DIR__ . '/../Views/index.html';
-
-        return new Response(ob_get_clean());
+        $twig = AppViews::getTemplate();
+        return new Response($twig->render('index.html.twig', [
+            'title' => 'Sender App'
+        ]));
     }
 
-    public static function send(Request $req): Response
+     public static function handle(Request $req): Response
+    {
+        $route = $req->attributes->get('_route');
+        $message = ($route == 'success') ? 'Email enviado para a fila de envios' : 'Erro ao salvar dados do email, contate o administrador';
+        $alert = ($route == 'success') ? 'success' : 'danger';
+        
+        $twig = AppViews::getTemplate();
+        return new Response($twig->render('index.html.twig', [
+            'title' => 'Sender App',
+            'message' => $message,
+            'alert' => $alert
+        ]));   
+    }
+
+    public static function send(Request $req): RedirectResponse
     {
         $fromName = $req->request->get('name');
         $toEmail = $req->request->get('email');
@@ -27,10 +45,10 @@ class EmailController
         $email->to($toEmail, $fromName);
         $email->content($subject, $message);
 
-        if (!$email->send()) {
-            return new Response($email->errorMessage);
+        if ($email->persist() !== true) {
+            return new RedirectResponse('https://localhost/appmail/error', 302);
         }
         
-        return new Response('Email sent!');
+        return new RedirectResponse('https://localhost/appmail/success', 302, array('teste' => 1));
     }
 }
