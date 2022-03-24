@@ -1,0 +1,35 @@
+version: "3.9"
+
+services:
+  rabbitmq:
+    hostname: rabbitmq
+    image: rabbitmq:3.9.4-management-alpine
+    container_name: ms-queues
+    ports: 
+      - 5672:5672
+      - 15672:15672
+    volumes: 
+      - ~/.docker/rabbitmq/data/:/var/lib/rabbitmq/
+      - ~/.docker/rabbitmq/log/:/var/log/rabbitmq
+    environment: 
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=admin
+    networks:
+      - app-mail
+
+  db:
+    image: postgres:13
+    container_name: appmail-db
+    ports:
+      - 5432:5432
+    volumes:
+      - /Users/luis/Docker/Postgres/volumes:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: docker
+    networks:
+      - app-mail
+
+networks:
+  app-mail:
+    external: true
+    name: dockernet
