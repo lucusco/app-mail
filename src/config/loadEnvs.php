@@ -12,6 +12,11 @@ try {
 		'CONF_EMAIL_HOST',
 		'CONF_EMAIL_USER',
 		'CONF_EMAIL_PASS',
+        'CONF_DB_HOST',
+        'CONF_DB_PORT',
+        'CONF_DB_NAME',
+        'CONF_DB_USER',
+        'CONF_DB_PASS'
 	]);
 
 } catch (InvalidPathException $e) {

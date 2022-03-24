@@ -4,8 +4,10 @@ namespace App\Mail\Classes;
 
 use App\Mail\Classes\Log;
 use App\Mail\Classes\LogInterface;
+use App\Mail\Database\Connection;
 use PHPMailer\PHPMailer\Exception;
 use PHPMailer\PHPMailer\PHPMailer;
+use PDOException;
 
 final class Email
 {
@@ -40,11 +42,42 @@ final class Email
 		$this->initLog();
 	}
 
-	private function initLog(): void
-	{
-		$this->log = new Log(LOG::LOG_EMAIL);
-		$this->log->addMessage(INFO_LEVEL, "New e-mail object created now");
-	}
+    public function persist()
+    {
+        if (!$this->hasRequiredFields()) {
+            $this->log->addMessage(WARNING_LEVEL, "Error 'Required Fields Missing' on function persist");
+            $this->errorMessage = "Required Fields Missing!";
+            return false;
+        }
+
+        $emailData = [
+            'status' => 100,
+            'send_to' => implode(',', array_keys($this->mail->getAllRecipientAddresses())),
+            'from_name' => $this->mail->FromName,
+            'subject' => $this->mail->Subject,
+            'message' => base64_encode($this->mail->Body)
+        ];
+
+        try {
+            $conn = Connection::getConnection();
+            $stmt = $conn->prepare('INSERT INTO email (status, send_to, from_name, subject, message) VALUES (?, ?, ?, ?, ?)');
+            $stmt->execute(array_values($emailData));
+            $idEmail = $conn->lastInsertId();
+
+            $queue = new EmailQueues();
+            $queue->publishMessageToSendEmail(json_encode([
+                'date' => date('Y-m-d H:i:s'),
+                'message' => 'New email to send',
+                'id' => $idEmail
+            ]));
+
+            return true;
+
+        } catch (PDOException $e) {
+            echo $e->getMessage();
+            die;
+        }
+    }
 
 	/**
 	 * Add a "To" address and an optional From Name
@@ -59,9 +92,12 @@ final class Email
 		}
 		
 		$this->mail->addAddress($address, htmlspecialchars($fromName, ENT_QUOTES));
-        if ($fromName) $this->mail->FromName = filter_var($fromName, FILTER_SANITIZE_STRING);
-		$this->hasAddress = true;
-		$this->log->addMessage(NOTICE_LEVEL, "Added address $address to e-mail");
+        if ($fromName) {
+            $this->mail->FromName = filter_var($fromName, FILTER_SANITIZE_STRING);
+        }
+		
+        $this->hasAddress = true;
+		$this->log->addMessage(NOTICE_LEVEL, "Added address '$address' to e-mail");
 	}
 
 	/**
@@ -80,7 +116,7 @@ final class Email
 		$this->mail->Subject = htmlspecialchars($subjetc, ENT_QUOTES);
 		$this->mail->Body = htmlspecialchars($message, ENT_QUOTES);
 		$this->hasContent = true;
-		$this->log->addMessage(NOTICE_LEVEL, "Added subject $subjetc and content to e-mail");
+		$this->log->addMessage(NOTICE_LEVEL, "Added subject '$subjetc' and content to e-mail");
 	}
 
 	/**
@@ -90,12 +126,20 @@ final class Email
 	{
 		try {
 			if (!$this->hasRequiredFields()) {
+                $this->log->addMessage(WARNING_LEVEL, "Error 'Required Fields Missing' on function send");
                 $this->errorMessage = "Required Fields Missing!";
                 return false;
             }
             
-            return $this->mail->send();
+            if ($this->mail->send()) {
+                $this->log->addMessage(INFO_LEVEL, "Email sent successfully");
+                return true;
+            }
+
+            return false;
 		} catch (Exception $e) {
+            $message = $e->getMessage();
+            $this->log->addMessage(ERROR_LEVEL, $message);
 			$this->errorMessage = $e->getMessage();
 			return false;
 		}
@@ -124,5 +168,11 @@ final class Email
 	private function hasRequiredFields(): bool
 	{
 		return ($this->hasAddress && $this->hasContent);
+	}
+
+    private function initLog(): void
+	{
+		$this->log = new Log(LOG::LOG_EMAIL);
+		$this->log->addMessage(INFO_LEVEL, "New e-mail object created now");
 	}
 }
