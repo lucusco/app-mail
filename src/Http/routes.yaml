@@ -9,3 +9,13 @@ send:
     path:       /send
     controller: App\Mail\Controllers\EmailController::send
     methods:    POST
+
+success:
+    path:       /success
+    controller: App\Mail\Controllers\EmailController::handle
+    methods:    GET
+
+error:
+    path:       /error
+    controller: App\Mail\Controllers\EmailController::handle
+    methods:    GET

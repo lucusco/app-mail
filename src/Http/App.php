@@ -5,19 +5,22 @@ namespace App\Mail\Http;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Matcher\UrlMatcher;
+use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\HttpKernel\Controller\ArgumentResolver;
+use Symfony\Component\HttpKernel\Controller\ControllerResolver;
 use Symfony\Component\Routing\Exception\MethodNotAllowedException;
 use Symfony\Component\Routing\Exception\ResourceNotFoundException;
-use Symfony\Component\HttpKernel\Controller\ControllerResolver;
-use Symfony\Component\HttpKernel\Controller\ArgumentResolver;
 
 class App
 {
+    private $dispatcher;
     private $matcher;
     private $controllerResolver;
     private $argumentResolver;
 
-    public function __construct(UrlMatcher $matcher, ControllerResolver $controllerResolver, ArgumentResolver $argumentResolver)
+    public function __construct(EventDispatcher $dispatcher, UrlMatcher $matcher, ControllerResolver $controllerResolver, ArgumentResolver $argumentResolver)
     {
+        $this->dispatcher = $dispatcher;
         $this->matcher = $matcher;
         $this->controllerResolver = $controllerResolver;
         $this->argumentResolver = $argumentResolver;
@@ -37,13 +40,18 @@ class App
             $arguments = $this->argumentResolver->getArguments($request, $controller);
     
             // Call method and return
-            return call_user_func_array($controller, $arguments);
+            $response = call_user_func_array($controller, $arguments);
         } catch (ResourceNotFoundException $e) {
-            return new Response('Not Found! >>> '.$e->getMessage(), 404);
+            $response = new Response('Not Found! >>> '.$e->getMessage(), 404);
         } catch (MethodNotAllowedException $e) {
-            return new Response('Method Not Allowed >>> '.$e->getMessage(), 405);
+            $response = new Response('Method Not Allowed >>> '.$e->getMessage(), 405);
         } catch (Exception $e) {
-            return new Response('An error occurred >>> '.$e->getMessage(), 500);
+            $response = new Response('An error occurred >>> '.$e->getMessage(), 500);
         }
+
+        // dispatch a response event
+        $this->dispatcher->dispatch(new ResponseEvent($response, $request), 'response');
+
+        return $response;
     }
 }
