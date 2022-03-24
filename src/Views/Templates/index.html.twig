@@ -18,7 +18,8 @@
   <header><i class="fas fa-envelope-open-text logo"></i></header>
   <main>
     <div class="container principal">
-      <h2>E-mail Sender App</h2>
+      <h2>{{ title }}</h2>
+      {{ include('messages.html.twig') }}
       <form action="send" method="post">
         <div>
           <label for="name" class="form-label">Your Name</label>
@@ -38,13 +39,15 @@
             placeholder="Type your message here"></textarea>
         </div>
         <div class="send">
-          <button type="submit" class="btn btn-success button">
+          <button type="submit" class="btn btn-success button ">
             <i class="fas fa-paper-plane"></i> Send
+            <!-- <span class="spinner-border spinner-border-sm" role="status" style="visibility: hidden;"></span> -->
           </button>
         </div>
       </form>
     </div>
   </main>
 </body>
-
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="assets/script.js"></script>
 </html>
