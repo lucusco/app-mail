@@ -2,31 +2,68 @@
 
 require_once dirname(__DIR__) . '/../vendor/autoload.php';
 
+use App\Mail\Classes\Log;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 
 class ConsumeQueue
 {
+    private Log $log;
 
-    public static function consume()
+    public function __construct()
     {
-        $connection = new AMQPStreamConnection('localhost', 5672, 'admin', 'admin');
-        $channel = $connection->channel();
+        $this->log = new Log(LOG::LOG_QUEUE);
+        $this->log->addMessage('info', "Initializing...\n");
+        exec('touch ' . QUEUE_CONTROL_FILE);
+    }
 
-        $channel->queue_declare('emails_to_send', false, false, false, false);
 
-        $callback = function ($msg) {
-            echo ' [x] Received ', $msg->body, "\n";
-        };
+    /**
+     * Consume queue
+     */
+    public function consume(): void
+    {
+        try {
+            $connection = new AMQPStreamConnection('localhost', 5672, 'admin', 'admin');
+            $channel = $connection->channel();
+            $channel->queue_declare('emails_to_send', false, false, false, false);
 
-        $channel->basic_consume('emails_to_send', '', false, true, false, false, $callback);
+            $callback = function ($msg) {
+                $data = (array)(json_decode($msg->body));
+                extract($data);
+                $this->log->addMessage('info', "[x] New E-mail to Send - ID: $id\n");
+            };
 
-        while ($channel->is_open()) {
-            $channel->wait();
+            $channel->basic_consume('emails_to_send', '', false, true, false, false, $callback);
+            while ($channel->is_open()) {
+                $channel->wait();
+            }
+
+            $channel->close();
+            $connection->close();
+        } catch (Exception $e) { // When containers are stopped
+            self::removeControlFile();
         }
+    }
 
-        $channel->close();
-        $connection->close();
+    /**
+     * Remove control file
+     */
+    private static function removeControlFile(): void
+    {
+        clearstatcache();
+        if (file_exists(QUEUE_CONTROL_FILE)) {
+            unlink(QUEUE_CONTROL_FILE);
+        }
+    }
+
+    public function __destruct()
+    {
+        self::removeControlFile();
     }
 }
 
-ConsumeQueue::consume();
+clearstatcache();
+if (file_exists(QUEUE_CONTROL_FILE) === false) {
+    $queue = new ConsumeQueue();
+    $queue->consume();
+}

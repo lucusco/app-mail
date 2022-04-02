@@ -5,6 +5,9 @@ require dirname(__DIR__) . '/vendor/autoload.php';
 # Load envs
 require SRC_DIR . 'config/loadEnvs.php';
 
+# Run in background to consume e-mail queue
+exec('php ' . SRC_DIR . 'Helpers/ConsumeQueue.php &');
+
 use App\Mail\Http\App;
 use App\Mail\Http\HandleResponse;
 use Symfony\Component\Config\FileLocator;

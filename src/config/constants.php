@@ -14,6 +14,7 @@ define('CONF_EMAIL_CHARSET', 'UTF-8');
 define('BASE_DIR', dirname(dirname(__DIR__)) . '/');
 define('SRC_DIR', BASE_DIR . 'src/');
 define('LOG_DIR', BASE_DIR . 'logs/');
+define('TMP_DIR', BASE_DIR . 'tmp/');
 define('ENVS_DIR', SRC_DIR . 'config/envs/');
 
 /* 
@@ -27,3 +28,8 @@ define('ERROR_LEVEL',     'error');
 define('CRITICAL_LEVEL',  'critical');
 define('ALERT_LEVEL',     'alert');
 define('EMERGENCY_LEVEL', 'emergency');
+
+/* 
+ * QUEUE CONTROL
+*/
+define('QUEUE_CONTROL_FILE', TMP_DIR . 'ConsumeQueueIsRunning');
