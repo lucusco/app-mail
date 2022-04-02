@@ -1,7 +1,8 @@
 vendor
 .DS_Store
 .env
-*.log
+/logs
+/tmp
 
 # Templates
 src/Views/Compiled/
