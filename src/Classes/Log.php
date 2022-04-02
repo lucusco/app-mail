@@ -14,7 +14,7 @@ final class Log implements LogInterface
 
 	public const LOG_EMAIL = 'mail.log';
 
-	public const LOG_USERS = 'users.log';
+	public const LOG_QUEUE = 'queue.log';
 
 	private const PERMITTED_LEVELS = [
 		'debug',		//(100): Detailed debug information

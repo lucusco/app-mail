@@ -12,7 +12,7 @@ class AppViews
         $loader = new FilesystemLoader(SRC_DIR . 'Views/Templates/');
 
         return new Environment($loader, [
-            'cache' => SRC_DIR . 'Views/Compiled/',
+            'cache' => TMP_DIR . 'Views/',
             'auto_reload' => true
         ]);
     }

@@ -47,6 +47,6 @@ class EmailController
             return new RedirectResponse('https://localhost/appmail/error', 302);
         }
         
-        return new RedirectResponse('https://localhost/appmail/success', 302, array('teste' => 1));
+        return new RedirectResponse('https://localhost/appmail/success', 302);
     }
 }
