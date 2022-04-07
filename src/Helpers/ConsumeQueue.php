@@ -2,9 +2,15 @@
 
 require_once dirname(__DIR__) . '/../vendor/autoload.php';
 
+require SRC_DIR . 'config/loadEnvs.php';
+
 use App\Mail\Classes\Log;
+use App\Mail\Classes\Email;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 
+/* 
+ * Class to consume the queue and call function to send email
+ */
 class ConsumeQueue
 {
     private Log $log;
@@ -18,7 +24,7 @@ class ConsumeQueue
 
 
     /**
-     * Consume queue
+     * Consume queue main function
      */
     public function consume(): void
     {
@@ -31,6 +37,7 @@ class ConsumeQueue
                 $data = (array)(json_decode($msg->body));
                 extract($data);
                 $this->log->addMessage('info', "[x] New E-mail to Send - ID: $id\n");
+                Email::send($id);
             };
 
             $channel->basic_consume('emails_to_send', '', false, true, false, false, $callback);

@@ -2,12 +2,13 @@
 
 namespace App\Mail\Classes;
 
+use PDO;
+use PDOException;
 use App\Mail\Classes\Log;
-use App\Mail\Classes\LogInterface;
 use App\Mail\Database\Connection;
+use App\Mail\Classes\LogInterface;
 use PHPMailer\PHPMailer\Exception;
 use PHPMailer\PHPMailer\PHPMailer;
-use PDOException;
 
 final class Email
 {
@@ -42,7 +43,12 @@ final class Email
 		$this->initLog();
 	}
 
-    public function persist()
+    /**
+     * Persist email 
+     *
+     * @return bool
+     */
+    public function persist(): bool
     {
         if (!$this->hasRequiredFields()) {
             $this->log->addMessage(WARNING_LEVEL, "Error 'Required Fields Missing' on function persist");
@@ -116,34 +122,70 @@ final class Email
 		$this->mail->Subject = htmlspecialchars($subjetc, ENT_QUOTES);
 		$this->mail->Body = htmlspecialchars($message, ENT_QUOTES);
 		$this->hasContent = true;
-		$this->log->addMessage(NOTICE_LEVEL, "Added subject '$subjetc' and content to e-mail");
+		$this->log->addMessage(NOTICE_LEVEL, "Added subject $subjetc and content to e-mail");
 	}
 
 	/**
 	 * Send Email
 	 */
-	public function send(): bool
+	public static function send($id)
 	{
-		try {
-			if (!$this->hasRequiredFields()) {
-                $this->log->addMessage(WARNING_LEVEL, "Error 'Required Fields Missing' on function send");
-                $this->errorMessage = "Required Fields Missing!";
-                return false;
-            }
-            
-            if ($this->mail->send()) {
-                $this->log->addMessage(INFO_LEVEL, "Email sent successfully");
+        $data = self::getEmailFromDB($id);
+        if (!$data) {
+            return false;
+        }
+
+        try {
+            $email = new Email();
+            $email->to($data['send_to'], $data['from_name']);
+            $email->content($data['subject'], base64_decode($data['message']));
+    
+    
+            if ($email->mail->send()) {
+                $email->log->addMessage(INFO_LEVEL, "Email sent successfully");
+                $email->updateStatus($data['id']);
                 return true;
             }
-
-            return false;
-		} catch (Exception $e) {
-            $message = $e->getMessage();
-            $this->log->addMessage(ERROR_LEVEL, $message);
-			$this->errorMessage = $e->getMessage();
-			return false;
-		}
+        } catch (Exception $e) {
+            (new Log(Log::LOG_EMAIL))->addMessage(CRITICAL_LEVEL, $e->getMessage());
+        }
 	}
+
+    /**
+     * Connect to DB and get Email data using the id passed by ConsumeQueue function
+     *
+     * @param int $id
+     */
+    private static function getEmailFromDB(int $id)
+    {
+        if (empty($id) || !is_numeric($id)) {
+            return false;
+        }
+
+        try {
+            $conn = Connection::getConnection();
+            $stmt = $conn->prepare("SELECT * FROM email WHERE id = :id");
+            $stmt->execute(array(':id' => $id));
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            (new Log(Log::LOG_EMAIL))->addMessage(CRITICAL_LEVEL, $e->getMessage());
+        }
+    }
+
+    /**
+     * Update DB status column
+     *
+     * @param int $id
+     */
+    private function updateStatus(int $id): void
+    {
+        try {
+            $conn = Connection::getConnection();
+            $conn->exec("UPDATE email SET status = 200 WHERE id = '$id'");
+        } catch (PDOException $e) {
+            (new Log(Log::LOG_EMAIL))->addMessage(CRITICAL_LEVEL, $e->getMessage());
+        }
+    }
 
 	/**
 	 * Add an attachment

@@ -11,6 +11,7 @@ class Connection
 
     private function __construct()
     {
+        // new Connection() not allowed
     }
 
     private static function connect(): PDO
