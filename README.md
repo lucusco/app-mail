@@ -3,6 +3,8 @@
 Project developed to implement PHPMailer and Monolog libraries as part of improve PHP acknowledgement.  
 
 Also, some Symfony packages were implemented to deal with Routes, Requests and Responses. The aim is to be like a 'real world' application,  besides, of course, to understand how this packages works.  
+Throughout development became the necessity to store data, so Postgres was the chosen one. 
+RabbitMQ was chosen to manage the send queue. When a request is received, it calls the function to send the email. 
 
 A simple interface was created to interact with user and give him the possibility to send an email. Bellow, the interface screenshoot:
 
@@ -12,7 +14,11 @@ A simple interface was created to interact with user and give him the possibilit
 Be able to send an email
 
 #### Technologies used
-Apache Webserver and PHP@7.4
+- PHP@7.4
+- Apache Webserver
+- RabbitMQ
+- Docker
+- PostgreSQL
 
 If you wish to contributte or suggest improvments, fell free to contact me.
 
